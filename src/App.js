@@ -1,24 +1,27 @@
-import logo from './logo.svg';
+
 import './App.css';
+import Button from './Components/Button';
+import Container from './Components/Container';
+import { useState } from 'react';
 
 function App() {
+  const [selectedAction, setSelectedAction] = useState('');
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <>
+      <header className='heading'>
+        <h1 className='heading_style'>zMigGIT</h1>
       </header>
-    </div>
+      <div className='Btns_container'>
+        <Button label="Endvor Extract" onClick={() => setSelectedAction('extract')} />
+        <Button label="Load MongoDB" onClick={() => setSelectedAction('load')}/>
+        <Button label="Transform Load to Git" onClick={() => setSelectedAction('transform')}/>
+        <Button label="Validate & Report" onClick={() => setSelectedAction('validate')} />
+      </div>
+      <Container action = {selectedAction}/>
+
+    </>
+
   );
 }
 
