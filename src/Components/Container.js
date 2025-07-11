@@ -2,12 +2,13 @@ import './Styles/Container.css';
 import { FaCloudUploadAlt } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { LuFileJson } from "react-icons/lu";
-import Button from './Button';
 
 function Container({ action }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [platform, setPlatform] = useState('');
+  const [transformOutput, setTransformOutput] = useState('');
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -51,19 +52,54 @@ function Container({ action }) {
     }
   };
 
+  const handlePlatformChange = (e) => {
+    setPlatform(e.target.value);
+  };
 
+  const handleTransform = async () => {
+    if (!platform) return;
+
+    try {
+      const response = await fetch("http://localhost:9090/api/transform", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ platform }),
+      });
+
+      if (response.ok) {
+        const result = await response.text();
+        setTransformOutput(result);
+      } else {
+        alert("❌ Transform failed");
+      }
+    } catch (error) {
+      console.error("Transform error:", error);
+      alert("🚫 Error during transformation");
+    }
+  };
+
+  // Auto-upload when 'load' is triggered
   useEffect(() => {
     if (action === 'load' && selectedFile) {
       handleLoadToMongo();
     }
   }, [action]);
 
+  // Auto-transform when action === transform and platform is selected
+  useEffect(() => {
+    if (action === 'transform' && platform) {
+      handleTransform();
+    }
+  }, [action, platform]);
+
   return (
     <div className="content_display">
       {action === 'extract' && (
-        <div className='chosefile'>
+        <div className="chosefile">
           <h3>Drop a JSON file here</h3>
-          <p className='arrow'>👇🏾</p>
+          <p className="arrow">👇🏾</p>
 
           <input
             type="file"
@@ -79,18 +115,27 @@ function Container({ action }) {
           </label>
 
           {selectedFile && (
-            <p className="file_name">uploaded json file <LuFileJson />{selectedFile.name}</p>
+            <p className="file_name">Uploaded JSON file <LuFileJson /> {selectedFile.name}</p>
           )}
         </div>
       )}
-      
 
       {action === 'load' && (
         <div className="load_section">
           {loading ? (
             <p className="loading_text">⏳ Uploading JSON to MongoDB...</p>
           ) : success ? (
-            <p className="success_text">✅ Successfully uploaded to MongoDB!</p>
+            <>
+              <p className="success_text">✅ Successfully uploaded to MongoDB!</p>
+
+              <select className="select_bar" value={platform} onChange={handlePlatformChange}>
+                <option value="">-- Select Platform --</option>
+                <option value="GITHUB">GITHUB</option>
+                <option value="GITLAB">GITLAB</option>
+                <option value="BITBUCKET">BitBucket</option>
+                <option value="AZURE_DEVOPS">Azure DevOps</option>
+              </select>
+            </>
           ) : selectedFile ? (
             <p className="waiting_text">Preparing to upload...</p>
           ) : (
@@ -98,18 +143,10 @@ function Container({ action }) {
           )}
         </div>
       )}
-      {action === "transform" && (
-        <div>
-          <select className='select_bar'>
-            <option>GITHUB</option>
-            <option>GITLAB</option>
-            <option>BitBucket</option>
-            <option>Azsure DevOps</option>
-          </select>
-          <Button / >
-        </div>
-      )
-      }
+
+      {action === "transform" && transformOutput && (
+        <p className="output_text">🔁 Backend says: {transformOutput}</p>
+      )}
     </div>
   );
 }
